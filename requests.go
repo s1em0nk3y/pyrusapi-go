@@ -132,6 +132,7 @@ func (a Attachment) Validate() error {
 // TaskCommentRequest is necessary to create a comment in the task.
 type TaskCommentRequest struct {
 	Text                   string        `json:"text,omitempty"`
+	FormattedText          string        `json:"formatted_text,omitempty"`
 	Subject                string        `json:"subject,omitempty"`
 	DueDate                string        `json:"due_date,omitempty"`
 	Due                    *time.Time    `json:"due,omitempty"`
