@@ -1,16 +1,16 @@
 # pyrusapi-go
 
-[![GoDoc Widget](https://godoc.org/github.com/L11R/pyrusapi-go?status.svg)](https://godoc.org/github.com/L11R/pyrusapi-go)
-[![Go Report](https://goreportcard.com/badge/github.com/L11R/pyrusapi-go)](https://goreportcard.com/report/github.com/L11R/pyrusapi-go)
-[![codecov](https://codecov.io/gh/L11R/pyrusapi-go/branch/master/graph/badge.svg)](https://codecov.io/gh/L11R/pyrusapi-go)
-![test](https://github.com/L11R/pyrusapi-go/actions/workflows/test.yml/badge.svg)
-![lint](https://github.com/L11R/pyrusapi-go/actions/workflows/lint.yml/badge.svg)
+[![GoDoc Widget](https://godoc.org/github.com/s1em0nk3y/pyrusapi-go?status.svg)](https://godoc.org/github.com/s1em0nk3y/pyrusapi-go)
+[![Go Report](https://goreportcard.com/badge/github.com/s1em0nk3y/pyrusapi-go)](https://goreportcard.com/report/github.com/s1em0nk3y/pyrusapi-go)
+[![codecov](https://codecov.io/gh/s1em0nk3y/pyrusapi-go/branch/master/graph/badge.svg)](https://codecov.io/gh/s1em0nk3y/pyrusapi-go)
+![test](https://github.com/s1em0nk3y/pyrusapi-go/actions/workflows/test.yml/badge.svg)
+![lint](https://github.com/s1em0nk3y/pyrusapi-go/actions/workflows/lint.yml/badge.svg)
 
 
 Library to work with Pyrus API v4 written in Golang.
 
 ## Install
-`go get github.com/L11R/pyrusapi-go`
+`go get github.com/s1em0nk3y/pyrusapi-go`
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/L11R/pyrusapi-go"
+	"github.com/s1em0nk3y/pyrusapi-go"
 )
 
 func main() {
