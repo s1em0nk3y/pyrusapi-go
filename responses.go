@@ -29,7 +29,6 @@ type FormsResponse struct {
 // FormRegisterResponse represents a response from Registry method.
 type FormRegisterResponse struct {
 	Tasks []*Task `json:"tasks"`
-	CSV   string  `json:"csv"`
 }
 
 // TaskResponse represents a response from Task method.

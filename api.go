@@ -45,6 +45,7 @@ type IClient interface {
 	Forms() (*FormsResponse, error)
 	Form(formID int) (*FormResponse, error)
 	Registry(formID int, req *RegistryRequest) (*FormRegisterResponse, error)
+	RegistryRaw(formID int, req *RegistryRequest) (*http.Response, error)
 	Task(taskID int) (*TaskResponse, error)
 	CreateTask(req *TaskRequest) (*TaskResponse, error)
 	CommentTask(taskID int, req *TaskCommentRequest) (*TaskResponse, error)
@@ -146,7 +147,7 @@ func (c *Client) getAndSetAccessToken() error {
 	return nil
 }
 
-func (c *Client) performRequest(method, path string, q *url.Values, reqBody, respBody interface{}) error {
+func (c *Client) rawResponse(method, path string, q *url.Values, reqBody interface{}) (*http.Response, error) {
 	auth := false
 	if path == "/auth" {
 		auth = true
@@ -155,7 +156,7 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 	u, err := url.Parse(c.baseURL + path)
 	if err != nil {
 		c.logger.Error("Error while parsing a URL!", err)
-		return err
+		return nil, err
 	}
 	if q != nil {
 		u.RawQuery = q.Encode()
@@ -178,15 +179,15 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 		fw, err := w.CreateFormFile("file", reqBody.(*fileRequest).Filename)
 		if err != nil {
 			c.logger.Error("Error while creating a new form file!", err)
-			return err
+			return nil, err
 		}
 		if _, err := io.Copy(fw, reqBody.(*fileRequest).Reader); err != nil {
 			c.logger.Error("Error while writing a file!", err)
-			return err
+			return nil, err
 		}
 		if err := w.Close(); err != nil {
 			c.logger.Error("Error while trying to close multipart writer!", err)
-			return err
+			return nil, err
 		}
 
 		req, reqErr = http.NewRequest(method, u.String(), buf)
@@ -195,7 +196,7 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 		buf := bytes.NewBuffer(nil)
 		if err := json.NewEncoder(buf).Encode(reqBody); err != nil {
 			c.logger.Error("Error while encoding JSON!", err)
-			return err
+			return nil, err
 		}
 
 		req, reqErr = http.NewRequest(method, u.String(), buf)
@@ -204,7 +205,7 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 	}
 	if reqErr != nil {
 		c.logger.Error("Error while creating a request!", err)
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("User-Agent", userAgent)
@@ -216,7 +217,7 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 	c.mu.RUnlock()
 	if !ok {
 		if err := c.getAndSetAccessToken(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -229,26 +230,34 @@ func (c *Client) performRequest(method, path string, q *url.Values, reqBody, res
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		c.logger.Error("Error while doing a request!", err)
-		return err
+		return nil, err
 	}
-	defer resp.Body.Close() //nolint:errcheck
 
 	// Get new access_token in case of old session
 	if resp.StatusCode == 401 && !auth {
 		if err := c.getAndSetAccessToken(); err != nil {
-			return err
+			return nil, err
 		}
-
-		return c.performRequest(method, path, q, reqBody, respBody)
+		return c.rawResponse(method, path, q, reqBody)
 	}
+	return resp, nil
+}
+
+func (c *Client) performRequest(method, path string, q *url.Values, reqBody, respBody interface{}) error {
+	resp, err := c.rawResponse(method, path, q, reqBody)
+	if err != nil {
+		c.logger.Error("Error while doing a request!", err)
+		return err
+	}
+	defer resp.Body.Close() //nolint:errcheck
 
 	// Don't read if there is no need in response body at all
-	if respBody == nil && !auth {
+	if respBody == nil && !(path == "/auth") {
 		return nil
 	}
 
 	// File downloading
-	if mt, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type")); err == nil && mt != "application/json" {
+	if mt, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type")); err == nil && mt != "application/json" && mt != "text/csv" {
 		mt, params, err := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
 		if err != nil {
 			c.logger.Error("Error while parsing media type!", err)
@@ -341,6 +350,10 @@ func (c *Client) Registry(formID int, req *RegistryRequest) (*FormRegisterRespon
 	}
 
 	return &tasks, nil
+}
+
+func (c *Client) RegistryRaw(formID int, req *RegistryRequest) (*http.Response, error) {
+	return c.rawResponse(http.MethodPost, "/forms/"+strconv.Itoa(formID)+"/register", nil, req)
 }
 
 // Task returns a task with all comments.
