@@ -697,7 +697,7 @@ func (c *Client) WebhookHandler() (http.HandlerFunc, <-chan Event) {
 
 	writeError := func(w http.ResponseWriter, code int, err error) {
 		respBody, _ := json.Marshal(map[string]string{"error": err.Error()})
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(code)
 		w.Header().Set("Content-Type", "application/json")
 		if _, err := w.Write(respBody); err != nil {
 			c.logger.Error("Error while writing a response!", err)
@@ -730,6 +730,39 @@ func (c *Client) WebhookHandler() (http.HandlerFunc, <-chan Event) {
 		}
 
 		eventChan <- event
+		w.WriteHeader(http.StatusOK)
+	}, eventChan
+}
+
+func (c *Client) WebhookHandlerRaw() (http.HandlerFunc, <-chan []byte) {
+	eventChan := make(chan []byte, c.eventBufferSize)
+
+	writeError := func(w http.ResponseWriter, code int, err error) {
+		respBody, _ := json.Marshal(map[string]string{"error": err.Error()})
+		w.WriteHeader(code)
+		w.Header().Set("Content-Type", "application/json")
+		if _, err := w.Write(respBody); err != nil {
+			c.logger.Error("Error while writing a response!", err)
+		}
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
+			c.logger.Error("Error while reading a request body!", err)
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		hasher := hmac.New(sha1.New, []byte(c.securityKey))
+		hasher.Write(b)
+		hash := hex.EncodeToString(hasher.Sum(nil))
+		if subtle.ConstantTimeCompare([]byte(hash), []byte(strings.ToLower(r.Header.Get("X-Pyrus-Sig")))) != 1 {
+			err := errors.New("invalid signature")
+			c.logger.Error("Invalid signature!", err)
+			writeError(w, http.StatusUnauthorized, err)
+			return
+		}
+		eventChan <- b
 		w.WriteHeader(http.StatusOK)
 	}, eventChan
 }
