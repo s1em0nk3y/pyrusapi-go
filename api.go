@@ -74,6 +74,7 @@ type IClient interface {
 	AddCallDetails(callGUID string, req *AddCallDetailsRequest) error
 	RegisterCallEvent(callGUID string, eventType CallEventType, extension string) error
 	WebhookHandler() (http.HandlerFunc, <-chan Event)
+	WebhookHandlerRaw() (http.HandlerFunc, <-chan []byte)
 }
 
 // Option helps to create an option for Client.
