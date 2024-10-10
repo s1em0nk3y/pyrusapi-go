@@ -100,6 +100,10 @@ type MembersResponse struct {
 	Members []*Member `json:"members"`
 }
 
+type RoleResponse struct {
+	Role
+}
+
 // RolesResponse represents a response from Roles method.
 type RolesResponse struct {
 	Roles []*Role `json:"roles"`

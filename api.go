@@ -63,6 +63,7 @@ type IClient interface {
 	CreateMember(req *MemberRequest) (*Member, error)
 	UpdateMember(memberID int, req *MemberRequest) (*Member, error)
 	BlockMember(memberID int) (*Member, error)
+	Role(id int) (*RoleResponse, error)
 	Roles() (*RolesResponse, error)
 	CreateRole(name string, members []int) (*Role, error)
 	UpdateRole(roleID int, name string, add, remove []int, banned bool) (*Role, error)
@@ -563,6 +564,14 @@ func (c *Client) BlockMember(memberID int) (*Member, error) {
 	}
 
 	return &member, nil
+}
+
+func (c *Client) Role(id int) (*RoleResponse, error) {
+	var role RoleResponse
+	if err := c.performRequest(http.MethodGet, "/roles"+strconv.Itoa(id), nil, nil, &role); err != nil {
+		return nil, err
+	}
+	return &role, nil
 }
 
 // Roles returns a list of roles.
