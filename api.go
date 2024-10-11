@@ -568,7 +568,7 @@ func (c *Client) BlockMember(memberID int) (*Member, error) {
 
 func (c *Client) Role(id int) (*RoleResponse, error) {
 	var role RoleResponse
-	if err := c.performRequest(http.MethodGet, "/roles"+strconv.Itoa(id), nil, nil, &role); err != nil {
+	if err := c.performRequest(http.MethodGet, "/roles/"+strconv.Itoa(id), nil, nil, &role); err != nil {
 		return nil, err
 	}
 	return &role, nil
