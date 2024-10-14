@@ -101,7 +101,11 @@ type MembersResponse struct {
 }
 
 type RoleResponse struct {
-	Role
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Banned     bool   `json:"banned"`
+	ExternalID string `json:"external_id"`
+	Members    []int  `json:"member_ids"`
 }
 
 // RolesResponse represents a response from Roles method.
