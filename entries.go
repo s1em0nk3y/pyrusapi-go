@@ -245,6 +245,7 @@ type Task struct {
 	Fields      []*FormField  `json:"fields,omitempty"`
 	Approvals   [][]*Approval `json:"approvals"`
 	CurrentStep int           `json:"current_step"`
+	Steps       []Step        `json:"steps"`
 }
 
 // TaskWithComments represents a task with all of its comments.
@@ -459,4 +460,10 @@ type NewFile struct {
 	URL string `json:"url,omitempty"`
 	// Name is link name (optional)
 	Name string `json:"name,omitempty"`
+}
+
+type Step struct {
+	Step        int    `json:"step"`
+	Name        string `json:"name"`
+	ElapsedTime int    `json:"elapsed_time"`
 }
